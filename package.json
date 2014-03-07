@@ -1,5 +1,10 @@
 {
   "devDependencies": {
-    "postcss": "^0.3.4"
-  }
+    "postcss": "^0.3.4",
+    "grunt": "^0.4.3",
+    "grunt-contrib-jshint": "^0.8.0",
+    "jquery": "^2.1.0",
+    "grunt-contrib-watch": "^0.5.3"
+  },
+  "main": "jeet.js"
 }
