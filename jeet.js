@@ -1,5 +1,8 @@
 $(function() {
 
+  // document.styleSheets[0].insertRule("html { font-size: 100px }", 0); // works in ff
+  // document.styleSheets[0].addRule('html', 'font-size: 100px'); // works in ie8+
+
   // Jeet.js
 
   var settings = {
@@ -15,7 +18,7 @@ $(function() {
 
 
   /*!
-   * jquery.addrule.js 0.0.1 - https://gist.github.com/yckart/5563717/
+   * jquery.addrule.js 0.0.15 - https://gist.github.com/yckart/5563717/
    * Add css-rules to an existing stylesheet.
    *
    * @see http://stackoverflow.com/a/16507264/1250044
@@ -24,24 +27,25 @@ $(function() {
    * Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php).
    * 2013/05/12
    **/
-
-  (function ($) {
-    window.addRule = function (selector, styles, sheet) {
-      if (typeof styles !== "string") {
-        var clone = "";
-        for (var style in styles) {
+  (function($) {
+    window.addRule = function(selector, styles, sheet) {
+      if(typeof styles !== 'string') {
+        var clone = '';
+        for(var style in styles) {
           var val = styles[style];
-          style = style.replace(/([A-Z])/g, "-$1").toLowerCase(); // convert to dash-case
-          clone += style + ":" + (style === "content" ? '"' + val + '"' : val) + "; ";
+          style = style.replace(/([A-Z])/g, '-$1').toLowerCase();
+          clone += style + ':' + (style === 'content' ? '"' + val + '"' : val) + '; ';
         }
         styles = clone;
       }
       sheet = sheet || document.styleSheets[0];
+      if(sheet.insertRule) sheet.insertRule(selector + ' {' + styles + '}', sheet.cssRules.length);
+      else if(sheet.addRule) sheet.addRule(selector, styles);
       sheet.addRule(selector, styles);
       return this;
     };
-    if ($) {
-      $.fn.addRule = function (styles, sheet) {
+    if($) {
+      $.fn.addRule = function(styles, sheet) {
         addRule(this.selector, styles, sheet);
         return this;
       };
@@ -71,10 +75,13 @@ $(function() {
 
 
   // edit
-  $('[jeet-edit="on"]').find('*').css({
-    background: '#eee',
-    background: 'rgba(0, 0, 0, .05)'
-  });
+  var editBackground = function() {
+    return {
+      background: '#eee',
+      background: 'rgba(0, 0, 0, .05)'
+    }
+  };
+  $('[jeet-edit]').find('*').addRule(editBackground());
 
   // center
   var centerMaxWidth = '1410px',
@@ -96,17 +103,15 @@ $(function() {
   $('[jeet-center]').addRule(cf());
   $('[jeet-center]:after').addRule(cfa());
   $('[jeet-center]').addRule(center());
-  $('[jeet-center]').each(function() {
-    if($(this).attr('jeet-center')) {
-      $(this).css({
-        maxWidth: $(this).attr('jeet-center')
-      });
-    }
+  $('[jeet-center]').each(function(i) {
+    var child = i + 1,
+        nthChild = $('[jeet-center]:nth-child('+ child +')');
+
+    nthChild.addRule('max-width: ' + nthChild.attr('jeet-center'));
+
     if($(this).attr('jeet-center-pad')) {
-      $(this).css({
-        paddingLeft: $(this).attr('jeet-center-pad'),
-        paddingRight: $(this).attr('jeet-center-pad')
-      });
+      nthChild.addRule('padding-left: ' + nthChild.attr('jeet-center-pad'));
+      nthChild.addRule('padding-right: ' + nthChild.attr('jeet-center-pad'));
     }
   });
 
@@ -114,32 +119,29 @@ $(function() {
   $('[jeet-span]:before').addRule(cfb());
   $('[jeet-span]').addRule(cf());
   $('[jeet-span]:after').addRule(cfa());
-  $('[jeet-span]').css({
+  $('[jeet-span]').addRule({
     paddingLeft: 0,
     paddingRight: 0,
     clear: 'none',
     textAlign: 'inherit'
   })
-  $('[jeet-span]').each(function() {
+  $('[jeet-span]').each(function(i) {
     var span = eval($(this).attr('jeet-span')),
-        side = getLayoutDirection();
+        side = getLayoutDirection(),
+        child = i + 1,
+        nthChild = $('[jeet-span]:nth-child('+ child +')');
+
     if($(this).attr('jeet-offset')) {
       var offset = eval($(this).attr('jeet-offset'));
       if(offset < 0) {
         offset *= -1;
-        $(this).css({
-          marginRight: offset * 100 + '%'
-        });
+        nthChild.addRule('margin-right: ' + offset * 100 + '%');
       } else {
-        $(this).css({
-          marginLeft: offset * 100 + '%'
-        });
+        nthChild.addRule('margin-left: ' + offset * 100 + '%');
       }
     }
-    $(this).css({
-      float: side,
-      width: eval($(this).attr('jeet-span')) * 100 + '%'
-    });
+    nthChild.addRule('float: ' + side);
+    nthChild.addRule('width: ' + eval($(this).attr('jeet-span')) * 100 + '%');
   });
 
 });
